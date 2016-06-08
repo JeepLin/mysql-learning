@@ -1,0 +1,40 @@
+mysql创建存储过程
+CREATE PROCEDURE risky_activity_monitor()
+		BEGIN
+
+		DECLARE now TIMESTAMP DEFAULT CURRENT_DATE;
+		DECLARE startTime, endTime VARCHAR(50);
+
+		SET now= NOW();
+		SET endTime= DATE_FORMAT(now, "%Y-%m-%d %H:%i:00");
+		SET startTime= DATE_ADD( endTime, INTERVAL -1 MINUTE );
+
+		INSERT INTO
+		statisticsdb.monitor_hot_act(
+						stat_time,
+						activity_id,
+						pay_order_count,
+						total_money)
+
+		SELECT
+		date_format(ord.createTime_col, '%Y-%m-%d %H:%i:00') as statTime,
+		activity.id as actID,
+		count(*) as orderCount,
+		sum(convert( ord.exchangeRate_col* (ticket.ticketPrice_col/ 100) , decimal(18,2))) as totalMoney
+
+		FROM
+		projectKDB.order_tbl  ord
+
+		LEFT JOIN projectKDB.ticket_tbl ticket ON ticket.orderId_col = ord.id
+		LEFT JOIN projectKDB.arrangement_tbl arrange ON arrange.id = ticket.arrangement_id
+		LEFT JOIN projectKDB.subClasses_tbl subclass ON subclass.id= arrange.subClassesId_col
+		LEFT JOIN projectKDB.activity_tbl activity ON activity.id = subclass.activityId_col
+
+		WHERE ord.orderChannel_col= 0
+		and ord.confirmStatus_col= 4
+		and	activity.id in( 23, 39, 117, 589, 835 )
+		and ord.createTime_col> startTime
+		and ord.createTime_col<= endTime
+		GROUP BY statTime;
+
+		END
