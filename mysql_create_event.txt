@@ -1,0 +1,19 @@
+mysql创建定时器
+
+CREATE EVENT IF NOT EXISTS risky_activity_monitor_event
+ON SCHEDULE EVERY 60 SECOND
+ON COMPLETION PRESERVE
+DO
+CALL risky_activity_monitor();
+
+mysql开启risky_activity_monitor_event定时器
+ALTER EVENT risky_activity_monitor_event ON  COMPLETION PRESERVE ENABLE;
+
+mysql关闭risky_activity_monitor_event定时器
+ALTER EVENT risky_activity_monitor_event ON COMPLETION PRESERVE DISABLE;
+
+查看mysql当前是否已开启定时器功能
+SHOW VARIABLES LIKE 'event_scheduler';
+
+开启mysql定时器功能
+SET GLOBAL event_scheduler = 1;
